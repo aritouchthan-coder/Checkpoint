@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Checkpoint Scanner</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="container">
+    <div class="header-title">
+      <h1>📷 Checkpoint Scanner</h1>
+      <p>ระบบสแกนจุดตรวจประจำวัน</p>
+    </div>
+
+    <div id="loginCard" class="card">
+      <h3>👤 เลือกผู้ใช้งาน</h3>
+
+      <label>ชื่อผู้ใช้งาน</label>
+      <select id="loginUser"></select>
+
+      <button id="confirmUserBtn">✓ ยืนยันและเริ่มใช้งาน</button>
+      <div id="loginMsg" class="muted"></div>
+    </div>
+
+    <div id="app" class="hidden">
+      <div class="card">
+        <div class="space-between">
+          <div>
+            <strong>ผู้ใช้งาน:</strong>
+            <span id="lockedUserPill" class="pill"></span>
+          </div>
+          <button class="secondary" id="changeUserBtn">🔄 เปลี่ยนผู้ใช้งาน</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📷 สแกน QR / Barcode</h3>
+
+        <div class="btn-row">
+          <button id="startBtn">▶️ เริ่มสแกน</button>
+          <button id="stopBtn" disabled>⏹️ หยุด</button>
+          <span id="status" class="status-pill">พร้อมใช้งาน</span>
+        </div>
+
+        <video id="preview" playsinline autoplay muted></video>
+
+        <div id="scanResult" class="muted">รอสแกน...</div>
+
+        <div class="manual-section">
+          <h4>⌨️ พิมพ์ Barcode / QR Code</h4>
+          <div class="manual-row">
+            <input type="text" id="manualBarcode" placeholder="พิมพ์ barcode ที่นี่">
+            <button class="green-btn" id="manualSubmitBtn">✓ ส่ง</button>
+          </div>
+          <div id="manualMsg" class="muted"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>สถานะจุดตรวจ</h3>
+        <table id="statusTable"></table>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
