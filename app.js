@@ -1,9 +1,10 @@
-const USERS = [
+const DEFAULT_USERS = [
+  { username: 'admin', name: 'ผู้ดูแลระบบ', role: 'admin' },
   { username: 'user1', name: 'พนักงาน 1', role: 'staff' },
   { username: 'user2', name: 'พนักงาน 2', role: 'staff' }
 ];
 
-const POINTS = [
+const DEFAULT_POINTS = [
   { id: 'P001', name: 'จุดตรวจ 1', barcode: 'P001' },
   { id: 'P002', name: 'จุดตรวจ 2', barcode: 'P002' },
   { id: 'P003', name: 'จุดตรวจ 3', barcode: 'P003' }
@@ -15,6 +16,36 @@ let codeReader = null;
 let scanning = false;
 let busy = false;
 let currentUser = '';
+
+function getUsersData() {
+  const data = localStorage.getItem('checkpoint_users');
+
+  if (!data) {
+    localStorage.setItem('checkpoint_users', JSON.stringify(DEFAULT_USERS));
+    return DEFAULT_USERS;
+  }
+
+  return JSON.parse(data);
+}
+
+function saveUsersData(users) {
+  localStorage.setItem('checkpoint_users', JSON.stringify(users));
+}
+
+function getPointsData() {
+  const data = localStorage.getItem('checkpoint_points');
+
+  if (!data) {
+    localStorage.setItem('checkpoint_points', JSON.stringify(DEFAULT_POINTS));
+    return DEFAULT_POINTS;
+  }
+
+  return JSON.parse(data);
+}
+
+function savePointsData(points) {
+  localStorage.setItem('checkpoint_points', JSON.stringify(points));
+}
 
 function getWorkDate() {
   const now = new Date();
@@ -50,19 +81,21 @@ function getScanStatus(username) {
 
 function loadUsers() {
   const select = $('loginUser');
+  const users = getUsersData();
 
   select.innerHTML = '<option value="">— เลือกชื่อ —</option>';
 
-  USERS.forEach(user => {
+  users.forEach(user => {
     const opt = document.createElement('option');
     opt.value = user.username;
-    opt.textContent = user.username;
+    opt.textContent = `${user.username} (${user.role})`;
     select.appendChild(opt);
   });
 }
 
 function enterAppWithUser(username) {
   currentUser = username;
+
   localStorage.setItem('checkpoint_user', username);
 
   $('lockedUserPill').textContent = username;
@@ -73,6 +106,7 @@ function enterAppWithUser(username) {
 }
 
 function renderStatus() {
+  const points = getPointsData();
   const scanned = getScanStatus(currentUser);
 
   let html = `
@@ -82,7 +116,7 @@ function renderStatus() {
     </tr>
   `;
 
-  POINTS.forEach(point => {
+  points.forEach(point => {
     const ok = scanned[point.id] === true;
 
     html += `
@@ -104,7 +138,20 @@ function saveScan(barcode) {
   busy = true;
 
   const code = String(barcode || '').trim();
-  const point = POINTS.find(p => p.barcode === code);
+  const points = getPointsData();
+  const point = points.find(p => p.barcode === code);
+
+  if (!currentUser) {
+    showResult('❌ ไม่พบผู้ใช้งาน');
+    busy = false;
+    return;
+  }
+
+  if (!code) {
+    showResult('❌ กรุณาใส่ Barcode');
+    busy = false;
+    return;
+  }
 
   if (!point) {
     showResult('❌ ไม่พบ QR นี้ในระบบ: ' + code);
@@ -133,6 +180,7 @@ function saveScan(barcode) {
     username: currentUser,
     pointId: point.id,
     pointName: point.name,
+    barcode: point.barcode,
     status: 'scanned'
   });
 
@@ -140,7 +188,9 @@ function saveScan(barcode) {
 
   showResult('✅ บันทึกแล้ว: ' + point.name);
   $('manualBarcode').value = '';
+
   renderStatus();
+  renderAdmin();
 
   setTimeout(() => {
     busy = false;
@@ -157,6 +207,11 @@ async function startScan() {
 
   if (!window.ZXing) {
     showResult('กำลังโหลดระบบสแกน...');
+    return;
+  }
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showResult('❌ Browser นี้ไม่รองรับกล้อง');
     return;
   }
 
@@ -181,13 +236,128 @@ async function startScan() {
 
 function stopScan() {
   try {
-    if (codeReader) codeReader.reset();
+    if (codeReader) {
+      codeReader.reset();
+    }
   } catch (e) {}
 
   scanning = false;
   $('startBtn').disabled = false;
   $('stopBtn').disabled = true;
   $('status').textContent = 'หยุดสแกน';
+}
+
+function renderAdmin() {
+  if (!$('adminPanel')) return;
+
+  const users = getUsersData();
+  const points = getPointsData();
+  const logs = getLogs();
+
+  $('usersTable').innerHTML = `
+    <tr>
+      <th>Username</th>
+      <th>Name</th>
+      <th>Role</th>
+      <th>Action</th>
+    </tr>
+    ${users.map(u => `
+      <tr>
+        <td>${u.username}</td>
+        <td>${u.name}</td>
+        <td>${u.role}</td>
+        <td>
+          <button class="small-btn" onclick="editUser('${u.username}')">แก้ไข</button>
+          <button class="small-btn danger" onclick="deleteUser('${u.username}')">ลบ</button>
+        </td>
+      </tr>
+    `).join('')}
+  `;
+
+  $('pointsTable').innerHTML = `
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Barcode</th>
+      <th>Action</th>
+    </tr>
+    ${points.map(p => `
+      <tr>
+        <td>${p.id}</td>
+        <td>${p.name}</td>
+        <td>${p.barcode}</td>
+        <td>
+          <button class="small-btn" onclick="editPoint('${p.id}')">แก้ไข</button>
+          <button class="small-btn danger" onclick="deletePoint('${p.id}')">ลบ</button>
+        </td>
+      </tr>
+    `).join('')}
+  `;
+
+  $('logsTable').innerHTML = `
+    <tr>
+      <th>Date</th>
+      <th>Time</th>
+      <th>User</th>
+      <th>Point</th>
+      <th>Barcode</th>
+      <th>Status</th>
+    </tr>
+    ${logs.map(l => `
+      <tr>
+        <td>${l.workDate}</td>
+        <td>${l.timestamp}</td>
+        <td>${l.username}</td>
+        <td>${l.pointName}</td>
+        <td>${l.barcode || ''}</td>
+        <td>${l.status}</td>
+      </tr>
+    `).join('')}
+  `;
+}
+
+function editUser(username) {
+  const user = getUsersData().find(u => u.username === username);
+  if (!user) return;
+
+  $('adminUsername').value = user.username;
+  $('adminName').value = user.name;
+  $('adminRole').value = user.role;
+}
+
+function deleteUser(username) {
+  if (!confirm('ลบ user นี้?')) return;
+
+  const users = getUsersData().filter(u => u.username !== username);
+  saveUsersData(users);
+
+  if (currentUser === username) {
+    localStorage.removeItem('checkpoint_user');
+    location.reload();
+    return;
+  }
+
+  loadUsers();
+  renderAdmin();
+}
+
+function editPoint(id) {
+  const point = getPointsData().find(p => p.id === id);
+  if (!point) return;
+
+  $('adminPointId').value = point.id;
+  $('adminPointName').value = point.name;
+  $('adminBarcode').value = point.barcode;
+}
+
+function deletePoint(id) {
+  if (!confirm('ลบ point นี้?')) return;
+
+  const points = getPointsData().filter(p => p.id !== id);
+  savePointsData(points);
+
+  renderStatus();
+  renderAdmin();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -206,9 +376,77 @@ document.addEventListener('DOMContentLoaded', () => {
 
   $('changeUserBtn').addEventListener('click', () => {
     stopScan();
+
     localStorage.removeItem('checkpoint_user');
+
     $('app').classList.add('hidden');
     $('loginCard').classList.remove('hidden');
+    $('adminPanel').classList.add('hidden');
+  });
+
+  $('adminBtn').addEventListener('click', () => {
+    $('adminPanel').classList.toggle('hidden');
+    renderAdmin();
+  });
+
+  $('saveUserBtn').addEventListener('click', () => {
+    const username = $('adminUsername').value.trim();
+    const name = $('adminName').value.trim();
+    const role = $('adminRole').value.trim() || 'staff';
+
+    if (!username) {
+      alert('กรุณาใส่ username');
+      return;
+    }
+
+    let users = getUsersData();
+    users = users.filter(u => u.username !== username);
+    users.push({ username, name, role });
+
+    saveUsersData(users);
+    loadUsers();
+    renderAdmin();
+
+    $('adminUsername').value = '';
+    $('adminName').value = '';
+    $('adminRole').value = '';
+  });
+
+  $('savePointBtn').addEventListener('click', () => {
+    const id = $('adminPointId').value.trim();
+    const name = $('adminPointName').value.trim();
+    const barcode = $('adminBarcode').value.trim();
+
+    if (!id) {
+      alert('กรุณาใส่ point id');
+      return;
+    }
+
+    if (!barcode) {
+      alert('กรุณาใส่ barcode');
+      return;
+    }
+
+    let points = getPointsData();
+    points = points.filter(p => p.id !== id);
+    points.push({ id, name, barcode });
+
+    savePointsData(points);
+    renderStatus();
+    renderAdmin();
+
+    $('adminPointId').value = '';
+    $('adminPointName').value = '';
+    $('adminBarcode').value = '';
+  });
+
+  $('clearLogsBtn').addEventListener('click', () => {
+    if (!confirm('ลบ Logs ทั้งหมด?')) return;
+
+    localStorage.removeItem('checkpoint_logs');
+
+    renderStatus();
+    renderAdmin();
   });
 
   $('startBtn').addEventListener('click', startScan);
