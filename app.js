@@ -1,4 +1,4 @@
-const API_URL = 'PUT_YOUR_APPS_SCRIPT_EXEC_URL_HERE';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyPRJXCBCo_5deOrkqBtLtTYeMNgStKoEInrI7B6ADp_jgLAPqmUiNrTY1Ll1ti5XC3Cw/exec';
 const ADMIN_PASSWORD = '1234';
 
 const $ = id => document.getElementById(id);
