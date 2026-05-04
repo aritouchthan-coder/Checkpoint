@@ -33,8 +33,38 @@
             <strong>ผู้ใช้งาน:</strong>
             <span id="lockedUserPill" class="pill"></span>
           </div>
-          <button class="secondary" id="changeUserBtn">🔄 เปลี่ยนผู้ใช้งาน</button>
+
+          <div class="top-buttons">
+            <button class="secondary" id="adminBtn">⚙️ Admin Panel</button>
+            <button class="secondary" id="changeUserBtn">🔄 เปลี่ยนผู้ใช้งาน</button>
+          </div>
         </div>
+      </div>
+
+      <div id="adminPanel" class="card hidden">
+        <h3>⚙️ Admin Panel</h3>
+
+        <h4>จัดการ Users</h4>
+        <input id="adminUsername" placeholder="username">
+        <input id="adminName" placeholder="name">
+        <input id="adminRole" placeholder="role เช่น admin / staff">
+        <button id="saveUserBtn">💾 บันทึก User</button>
+        <table id="usersTable"></table>
+
+        <hr>
+
+        <h4>จัดการ Points</h4>
+        <input id="adminPointId" placeholder="point id เช่น P001">
+        <input id="adminPointName" placeholder="ชื่อจุดตรวจ">
+        <input id="adminBarcode" placeholder="barcode / QR code">
+        <button id="savePointBtn">💾 บันทึก Point</button>
+        <table id="pointsTable"></table>
+
+        <hr>
+
+        <h4>Logs</h4>
+        <button class="danger" id="clearLogsBtn">🗑️ ลบ Logs ทั้งหมด</button>
+        <table id="logsTable"></table>
       </div>
 
       <div class="card">
