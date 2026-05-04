@@ -1,4 +1,4 @@
-const API_URL = 'https://script.google.com/macros/s/AKfycbyPRJXCBCo_5deOrkqBtLtTYeMNgStKoEInrI7B6ADp_jgLAPqmUiNrTY1Ll1ti5XC3Cw/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbzGsn-l3LDdMwghjJ58C2B-IVpZ8_lXRFfQwyEEYv4kFSp4Q_hcOFv7d0--8rvitKVaWg/exec';
 const ADMIN_PASSWORD = '1234';
 
 const $ = id => document.getElementById(id);
