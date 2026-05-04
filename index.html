@@ -20,13 +20,16 @@
       <h3>👤 เลือกผู้ใช้งาน</h3>
 
       <label>ชื่อผู้ใช้งาน</label>
-      <select id="loginUser"></select>
+      <select id="loginUser">
+        <option value="">กำลังโหลด...</option>
+      </select>
 
       <button id="confirmUserBtn">✓ ยืนยันและเริ่มใช้งาน</button>
       <div id="loginMsg" class="muted"></div>
     </div>
 
     <div id="app" class="hidden">
+
       <div class="card">
         <div class="space-between">
           <div>
@@ -94,6 +97,7 @@
         <h3>สถานะจุดตรวจ</h3>
         <table id="statusTable"></table>
       </div>
+
     </div>
   </div>
 
