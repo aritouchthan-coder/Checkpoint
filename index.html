@@ -18,15 +18,13 @@
 
     <div id="loginCard" class="card">
       <h3>👤 เลือกผู้ใช้งาน</h3>
-      <label>ชื่อผู้ใช้งาน</label>
-      <select id="loginUser">
-        <option value="">กำลังโหลด...</option>
-      </select>
-      <button id="confirmUserBtn">✓ ยืนยันและเริ่มใช้งาน</button>
+      <select id="loginUser"></select>
+      <button id="confirmUserBtn">✓ เริ่มใช้งาน</button>
       <div id="loginMsg" class="muted"></div>
     </div>
 
     <div id="app" class="hidden">
+
       <div class="card">
         <div class="space-between">
           <div>
@@ -35,74 +33,48 @@
           </div>
 
           <div class="top-buttons">
-            <button class="secondary" id="adminBtn">⚙️ Admin Panel</button>
-            <button class="secondary" id="changeUserBtn">🔄 เปลี่ยนผู้ใช้งาน</button>
+            <button class="secondary" id="adminBtn">⚙️ Admin</button>
+            <button class="secondary" id="changeUserBtn">🔄 เปลี่ยน</button>
           </div>
         </div>
       </div>
 
-      <div id="adminPanel" class="card hidden">
-        <h3>⚙️ Admin Panel</h3>
-
-        <h4>จัดการ Users</h4>
-        <input id="adminUsername" placeholder="username">
-        <input id="adminName" placeholder="name">
-        <input id="adminRole" placeholder="role เช่น admin / staff">
-        <button id="saveUserBtn">💾 บันทึก User</button>
-        <table id="usersTable"></table>
-
-        <hr>
-
-        <h4>จัดการ Points</h4>
-        <input id="adminPointId" placeholder="point id เช่น P001">
-        <input id="adminPointName" placeholder="ชื่อพื้นที่ / จุดตรวจ">
-        <input id="adminBarcode" placeholder="barcode / QR code">
-        <button id="savePointBtn">💾 บันทึก Point</button>
-        <table id="pointsTable"></table>
-
-        <hr>
-
-        <h4>Logs</h4>
-        <button class="danger" id="clearLogsBtn">🗑️ ลบ Logs ทั้งหมด</button>
-        <table id="logsTable"></table>
-      </div>
-
       <div class="card">
-        <h3>📷 สแกน QR / Barcode</h3>
+        <h3>📷 สแกน</h3>
 
         <div class="btn-row">
-          <button id="startBtn">▶️ เริ่มสแกน</button>
+          <button id="startBtn">▶️ เริ่ม</button>
           <button id="stopBtn" disabled>⏹️ หยุด</button>
-          <span id="status" class="status-pill">พร้อมใช้งาน</span>
+          <span id="status" class="status-pill">พร้อม</span>
         </div>
 
         <video id="preview" playsinline autoplay muted></video>
 
         <div id="scanResult" class="muted">รอสแกน...</div>
-        <div class="muted">* ระบบนี้รับจากการสแกนเท่านั้น ไม่มีช่องพิมพ์ Barcode</div>
+        <div class="muted">* สแกนเท่านั้น ไม่มีช่องพิมพ์</div>
       </div>
 
       <div class="card">
-        <h3>📊 Dashboard รายจุดตรวจ</h3>
+        <h3>📊 Dashboard</h3>
 
         <div class="dashboard-summary">
           <div class="summary-box">
-            <span class="summary-label">จุดทั้งหมด</span>
+            <span>ทั้งหมด</span>
             <strong id="totalPoints">0</strong>
           </div>
           <div class="summary-box done-box">
-            <span class="summary-label">สแกนแล้ว</span>
+            <span>สแกนแล้ว</span>
             <strong id="donePoints">0</strong>
           </div>
           <div class="summary-box not-box">
-            <span class="summary-label">ยังไม่สแกน</span>
+            <span>ยังไม่สแกน</span>
             <strong id="notDonePoints">0</strong>
           </div>
         </div>
 
-        <button id="refreshDashboardBtn">🔄 รีเฟรช Dashboard</button>
         <table id="dashboardTable"></table>
       </div>
+
     </div>
   </div>
 
