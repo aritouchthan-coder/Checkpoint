@@ -18,6 +18,7 @@ function api(action, params = {}) {
     const query = new URLSearchParams({
       action,
       callback: callbackName,
+      _: Date.now(),
       ...params
     });
 
@@ -40,7 +41,6 @@ function api(action, params = {}) {
   });
 }
 
-/* ===== รีโหลดหน้าเว็บทุกวันเวลา 11:00 ===== */
 function setupDailyReload() {
   function getNextReloadTime() {
     const now = new Date();
@@ -73,6 +73,42 @@ function getTodayWorkDate() {
   const d = String(now.getDate()).padStart(2, '0');
 
   return `${y}-${m}-${d}`;
+}
+
+function normalizeDate(value) {
+  if (!value) return '';
+
+  if (typeof value === 'string') {
+    const text = value.trim();
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+      return text;
+    }
+
+    const d = new Date(text);
+    if (!isNaN(d)) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    return text;
+  }
+
+  const d = new Date(value);
+  if (!isNaN(d)) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  return String(value).trim();
+}
+
+function normalizeText(value) {
+  return String(value || '').trim();
 }
 
 function playBeep() {
@@ -123,6 +159,8 @@ async function loadPoints() {
 
 async function loadLogs() {
   logsCache = await api('getLogs');
+
+  console.log('logsCache:', logsCache);
 }
 
 async function enterAppWithUser(username) {
@@ -156,6 +194,10 @@ async function renderDashboard() {
 
   const workDate = getTodayWorkDate();
 
+  console.log('workDate หน้าเว็บ:', workDate);
+  console.log('pointsCache:', pointsCache);
+  console.log('logsCache:', logsCache);
+
   let doneCount = 0;
 
   let html = `
@@ -170,9 +212,11 @@ async function renderDashboard() {
   `;
 
   pointsCache.forEach(point => {
+    const pointId = normalizeText(point.id);
+
     const pointLogs = logsCache.filter(log =>
-      log.workDate === workDate &&
-      log.pointId === point.id
+      normalizeDate(log.workDate) === workDate &&
+      normalizeText(log.pointId) === pointId
     );
 
     const latest = pointLogs[pointLogs.length - 1];
@@ -187,7 +231,7 @@ async function renderDashboard() {
         <td>${escapeHtml(point.name)}</td>
         <td>${escapeHtml(point.barcode)}</td>
         <td class="${pointLogs.length ? 'done' : 'not'}">
-          ${pointLogs.length ? '✔ สแกนแล้ว' : '✖ ยังไม่สแกน'}
+          ${pointLogs.length ? '✔ บันทึกแล้ว' : '✖ ยังไม่สแกน'}
         </td>
         <td>${latest ? escapeHtml(latest.username) : '-'}</td>
         <td>${latest ? escapeHtml(latest.timestamp) : '-'}</td>
@@ -232,13 +276,17 @@ async function saveScan(barcode) {
     if (res.status === 'success') {
       playBeep();
       showResult('✅ บันทึกแล้ว: ' + res.point);
+
       await refreshAll();
+
       alert('✅ บันทึกสำเร็จ\n\nจุดตรวจ: ' + res.point);
 
     } else if (res.status === 'duplicate') {
       playBeep();
       showResult('⚠️ จุดนี้สแกนแล้ว: ' + res.point);
+
       await refreshAll();
+
       alert('⚠️ จุดนี้สแกนแล้ว\n\nจุดตรวจ: ' + res.point);
 
     } else {
@@ -360,7 +408,7 @@ async function renderAdmin() {
     </tr>
     ${logsCache.map(l => `
       <tr>
-        <td>${escapeHtml(l.workDate)}</td>
+        <td>${escapeHtml(normalizeDate(l.workDate))}</td>
         <td>${escapeHtml(l.timestamp)}</td>
         <td>${escapeHtml(l.username)}</td>
         <td>${escapeHtml(l.pointId)}</td>
