@@ -40,6 +40,16 @@ function api(action, params = {}) {
   });
 }
 
+function getTodayWorkDate() {
+  const now = new Date();
+
+  if (now.getHours() < 10) {
+    now.setDate(now.getDate() - 1);
+  }
+
+  return now.toISOString().slice(0, 10);
+}
+
 async function loadUsers() {
   const select = $('loginUser');
 
@@ -91,6 +101,7 @@ async function refreshAll() {
     await loadPoints();
     await loadLogs();
     await renderStatus();
+    await renderDashboard();
 
     if (!$('adminPanel').classList.contains('hidden')) {
       await renderAdmin();
@@ -124,6 +135,56 @@ async function renderStatus() {
   });
 
   $('statusTable').innerHTML = html;
+}
+
+async function renderDashboard() {
+  await loadPoints();
+  await loadLogs();
+
+  const workDate = getTodayWorkDate();
+
+  let doneCount = 0;
+
+  let html = `
+    <tr>
+      <th>จุดตรวจ</th>
+      <th>สถานะวันนี้</th>
+      <th>ผู้สแกนล่าสุด</th>
+      <th>เวลาล่าสุด</th>
+      <th>จำนวนครั้งวันนี้</th>
+    </tr>
+  `;
+
+  pointsCache.forEach(point => {
+    const pointLogs = logsCache.filter(log =>
+      log.workDate === workDate &&
+      log.pointId === point.id
+    );
+
+    const latest = pointLogs[pointLogs.length - 1];
+
+    if (pointLogs.length > 0) {
+      doneCount++;
+    }
+
+    html += `
+      <tr>
+        <td>${escapeHtml(point.name)}</td>
+        <td class="${pointLogs.length ? 'done' : 'not'}">
+          ${pointLogs.length ? '✔ สแกนแล้ว' : '✖ ยังไม่สแกน'}
+        </td>
+        <td>${latest ? escapeHtml(latest.username) : '-'}</td>
+        <td>${latest ? escapeHtml(latest.timestamp) : '-'}</td>
+        <td>${pointLogs.length}</td>
+      </tr>
+    `;
+  });
+
+  $('dashboardTable').innerHTML = html;
+
+  $('totalPoints').textContent = pointsCache.length;
+  $('donePoints').textContent = doneCount;
+  $('notDonePoints').textContent = pointsCache.length - doneCount;
 }
 
 async function saveScan(barcode) {
@@ -451,6 +512,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     alert(res.message || 'สำเร็จ');
 
     await refreshAll();
+  });
+
+  $('refreshDashboardBtn').addEventListener('click', async () => {
+    await renderDashboard();
   });
 
   $('startBtn').addEventListener('click', startScan);
