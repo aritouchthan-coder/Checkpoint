@@ -18,18 +18,15 @@
 
     <div id="loginCard" class="card">
       <h3>👤 เลือกผู้ใช้งาน</h3>
-
       <label>ชื่อผู้ใช้งาน</label>
       <select id="loginUser">
         <option value="">กำลังโหลด...</option>
       </select>
-
       <button id="confirmUserBtn">✓ ยืนยันและเริ่มใช้งาน</button>
       <div id="loginMsg" class="muted"></div>
     </div>
 
     <div id="app" class="hidden">
-
       <div class="card">
         <div class="space-between">
           <div>
@@ -94,10 +91,31 @@
       </div>
 
       <div class="card">
-        <h3>สถานะจุดตรวจ</h3>
-        <table id="statusTable"></table>
+        <h3>📊 Dashboard รายจุดตรวจ</h3>
+
+        <div class="dashboard-summary">
+          <div class="summary-box">
+            <span class="summary-label">จุดทั้งหมด</span>
+            <strong id="totalPoints">0</strong>
+          </div>
+          <div class="summary-box done-box">
+            <span class="summary-label">สแกนแล้ว</span>
+            <strong id="donePoints">0</strong>
+          </div>
+          <div class="summary-box not-box">
+            <span class="summary-label">ยังไม่สแกน</span>
+            <strong id="notDonePoints">0</strong>
+          </div>
+        </div>
+
+        <button id="refreshDashboardBtn">🔄 รีเฟรช Dashboard</button>
+        <table id="dashboardTable"></table>
       </div>
 
+      <div class="card">
+        <h3>สถานะจุดตรวจของผู้ใช้งานนี้</h3>
+        <table id="statusTable"></table>
+      </div>
     </div>
   </div>
 
