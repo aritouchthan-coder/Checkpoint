@@ -40,11 +40,12 @@ function api(action, params = {}) {
   });
 }
 
+/* ===== รีโหลดหน้าเว็บทุกวันเวลา 11:00 ===== */
 function setupDailyReload() {
   function getNextReloadTime() {
     const now = new Date();
-
     const target = new Date();
+
     target.setHours(11, 0, 0, 0);
 
     if (now > target) {
