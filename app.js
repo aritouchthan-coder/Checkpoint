@@ -47,7 +47,32 @@ function getTodayWorkDate() {
     now.setDate(now.getDate() - 1);
   }
 
-  return now.toISOString().slice(0, 10);
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+
+  return `${y}-${m}-${d}`;
+}
+
+function playBeep() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioContext();
+
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    oscillator.type = 'sine';
+    oscillator.frequency.value = 1200;
+
+    oscillator.connect(gain);
+    gain.connect(ctx.destination);
+
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+
+    oscillator.start();
+    oscillator.stop(ctx.currentTime + 0.15);
+  } catch (e) {}
 }
 
 async function loadUsers() {
@@ -109,7 +134,6 @@ async function renderDashboard() {
   await loadLogs();
 
   const workDate = getTodayWorkDate();
-
   let doneCount = 0;
 
   let html = `
@@ -150,7 +174,6 @@ async function renderDashboard() {
   });
 
   $('dashboardTable').innerHTML = html;
-
   $('totalPoints').textContent = pointsCache.length;
   $('donePoints').textContent = doneCount;
   $('notDonePoints').textContent = pointsCache.length - doneCount;
@@ -184,17 +207,25 @@ async function saveScan(barcode) {
     });
 
     if (res.status === 'success') {
+      playBeep();
       showResult('✅ บันทึกแล้ว: ' + res.point);
+      await refreshAll();
+      alert('✅ บันทึกสำเร็จ\n\nจุดตรวจ: ' + res.point);
+
     } else if (res.status === 'duplicate') {
+      playBeep();
       showResult('⚠️ จุดนี้สแกนแล้ว: ' + res.point);
+      await refreshAll();
+      alert('⚠️ จุดนี้สแกนแล้ว\n\nจุดตรวจ: ' + res.point);
+
     } else {
       showResult('❌ ' + res.message);
+      alert('❌ ' + res.message);
     }
-
-    await refreshAll();
 
   } catch (err) {
     showResult('❌ บันทึกไม่สำเร็จ: ' + err.message);
+    alert('❌ บันทึกไม่สำเร็จ\n\n' + err.message);
   }
 
   setTimeout(() => {
