@@ -116,7 +116,8 @@ async function renderStatus() {
 
   let html = `
     <tr>
-      <th>จุด</th>
+      <th>รหัสจุด</th>
+      <th>พื้นที่ / จุดตรวจ</th>
       <th>สถานะ</th>
     </tr>
   `;
@@ -126,6 +127,7 @@ async function renderStatus() {
 
     html += `
       <tr>
+        <td>${escapeHtml(point.id)}</td>
         <td>${escapeHtml(point.name)}</td>
         <td class="${ok ? 'done' : 'not'}">
           ${ok ? '✔ สแกนแล้ว' : '✖ ยังไม่สแกน'}
@@ -147,11 +149,12 @@ async function renderDashboard() {
 
   let html = `
     <tr>
-      <th>จุดตรวจ</th>
+      <th>รหัสจุด</th>
+      <th>พื้นที่ / จุดตรวจ</th>
+      <th>Barcode</th>
       <th>สถานะวันนี้</th>
       <th>ผู้สแกนล่าสุด</th>
       <th>เวลาล่าสุด</th>
-      <th>จำนวนครั้งวันนี้</th>
     </tr>
   `;
 
@@ -169,13 +172,14 @@ async function renderDashboard() {
 
     html += `
       <tr>
+        <td>${escapeHtml(point.id)}</td>
         <td>${escapeHtml(point.name)}</td>
+        <td>${escapeHtml(point.barcode)}</td>
         <td class="${pointLogs.length ? 'done' : 'not'}">
           ${pointLogs.length ? '✔ สแกนแล้ว' : '✖ ยังไม่สแกน'}
         </td>
         <td>${latest ? escapeHtml(latest.username) : '-'}</td>
         <td>${latest ? escapeHtml(latest.timestamp) : '-'}</td>
-        <td>${pointLogs.length}</td>
       </tr>
     `;
   });
@@ -201,7 +205,7 @@ async function saveScan(barcode) {
   }
 
   if (!code) {
-    showResult('❌ กรุณาใส่ Barcode');
+    showResult('❌ ไม่พบ Barcode');
     busy = false;
     return;
   }
@@ -216,7 +220,6 @@ async function saveScan(barcode) {
 
     if (res.status === 'success') {
       showResult('✅ บันทึกแล้ว: ' + res.point);
-      $('manualBarcode').value = '';
     } else if (res.status === 'duplicate') {
       showResult('⚠️ จุดนี้สแกนแล้ว: ' + res.point);
     } else {
@@ -236,7 +239,6 @@ async function saveScan(barcode) {
 
 function showResult(message) {
   $('scanResult').textContent = message;
-  $('manualMsg').textContent = message;
 }
 
 async function startScan() {
@@ -309,8 +311,8 @@ async function renderAdmin() {
 
   $('pointsTable').innerHTML = `
     <tr>
-      <th>ID</th>
-      <th>Name</th>
+      <th>รหัสจุด</th>
+      <th>พื้นที่ / จุดตรวจ</th>
       <th>Barcode</th>
       <th>Action</th>
     </tr>
@@ -332,7 +334,8 @@ async function renderAdmin() {
       <th>Date</th>
       <th>Time</th>
       <th>User</th>
-      <th>Point</th>
+      <th>Point ID</th>
+      <th>Point Name</th>
       <th>Barcode</th>
       <th>Status</th>
     </tr>
@@ -341,6 +344,7 @@ async function renderAdmin() {
         <td>${escapeHtml(l.workDate)}</td>
         <td>${escapeHtml(l.timestamp)}</td>
         <td>${escapeHtml(l.username)}</td>
+        <td>${escapeHtml(l.pointId)}</td>
         <td>${escapeHtml(l.pointName)}</td>
         <td>${escapeHtml(l.barcode)}</td>
         <td>${escapeHtml(l.status)}</td>
@@ -520,16 +524,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   $('startBtn').addEventListener('click', startScan);
   $('stopBtn').addEventListener('click', stopScan);
-
-  $('manualSubmitBtn').addEventListener('click', () => {
-    saveScan($('manualBarcode').value);
-  });
-
-  $('manualBarcode').addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-      saveScan($('manualBarcode').value);
-    }
-  });
 
   const savedUser = localStorage.getItem('checkpoint_user');
 
