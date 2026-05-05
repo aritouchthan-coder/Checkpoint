@@ -75,7 +75,7 @@ input {
 button {
   margin-top: 12px;
   border: none;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg,#667eea 0%,#764ba2 100%);
   color: #fff;
   font-weight: 600;
   cursor: pointer;
@@ -99,7 +99,7 @@ button.danger,
 }
 
 .green-btn {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  background: linear-gradient(135deg,#22c55e 0%,#16a34a 100%);
 }
 
 .space-between,
@@ -160,6 +160,40 @@ hr {
   border-top: 1px solid #ddd;
 }
 
+.dashboard-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.summary-box {
+  background: #f8f9ff;
+  border: 1px solid #e0e7ff;
+  border-radius: 14px;
+  padding: 16px;
+  text-align: center;
+}
+
+.summary-box strong {
+  display: block;
+  font-size: 30px;
+  margin-top: 6px;
+}
+
+.summary-label {
+  color: #555;
+  font-size: 14px;
+}
+
+.done-box strong {
+  color: green;
+}
+
+.not-box strong {
+  color: red;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -207,6 +241,10 @@ th {
 
   .header-title h1 {
     font-size: 26px;
+  }
+
+  .dashboard-summary {
+    grid-template-columns: 1fr;
   }
 
   table {
