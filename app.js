@@ -79,12 +79,6 @@ async function loadLogs() {
   logsCache = await api('getLogs');
 }
 
-async function loadScanStatus() {
-  return await api('getScanStatus', {
-    username: currentUser
-  });
-}
-
 async function enterAppWithUser(username) {
   currentUser = username;
   localStorage.setItem('checkpoint_user', username);
@@ -100,7 +94,6 @@ async function refreshAll() {
   try {
     await loadPoints();
     await loadLogs();
-    await renderStatus();
     await renderDashboard();
 
     if (!$('adminPanel').classList.contains('hidden')) {
@@ -109,34 +102,6 @@ async function refreshAll() {
   } catch (err) {
     showResult('โหลดข้อมูลไม่สำเร็จ: ' + err.message);
   }
-}
-
-async function renderStatus() {
-  const scanned = await loadScanStatus();
-
-  let html = `
-    <tr>
-      <th>รหัสจุด</th>
-      <th>พื้นที่ / จุดตรวจ</th>
-      <th>สถานะ</th>
-    </tr>
-  `;
-
-  pointsCache.forEach(point => {
-    const ok = scanned[point.id] === true;
-
-    html += `
-      <tr>
-        <td>${escapeHtml(point.id)}</td>
-        <td>${escapeHtml(point.name)}</td>
-        <td class="${ok ? 'done' : 'not'}">
-          ${ok ? '✔ สแกนแล้ว' : '✖ ยังไม่สแกน'}
-        </td>
-      </tr>
-    `;
-  });
-
-  $('statusTable').innerHTML = html;
 }
 
 async function renderDashboard() {
