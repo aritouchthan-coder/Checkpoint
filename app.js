@@ -87,10 +87,7 @@ function normalizeDate(value) {
 
     const d = new Date(text);
     if (!isNaN(d)) {
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return `${y}-${m}-${day}`;
+      return formatDate(d);
     }
 
     return text;
@@ -98,13 +95,17 @@ function normalizeDate(value) {
 
   const d = new Date(value);
   if (!isNaN(d)) {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
+    return formatDate(d);
   }
 
   return String(value).trim();
+}
+
+function formatDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 function normalizeText(value) {
@@ -159,8 +160,6 @@ async function loadPoints() {
 
 async function loadLogs() {
   logsCache = await api('getLogs');
-
-  console.log('logsCache:', logsCache);
 }
 
 async function enterAppWithUser(username) {
@@ -193,11 +192,6 @@ async function renderDashboard() {
   await loadLogs();
 
   const workDate = getTodayWorkDate();
-
-  console.log('workDate หน้าเว็บ:', workDate);
-  console.log('pointsCache:', pointsCache);
-  console.log('logsCache:', logsCache);
-
   let doneCount = 0;
 
   let html = `
@@ -255,12 +249,14 @@ async function saveScan(barcode) {
 
   if (!currentUser) {
     showResult('❌ ไม่พบผู้ใช้งาน');
+    alert('❌ ไม่พบผู้ใช้งาน');
     busy = false;
     return;
   }
 
   if (!code) {
     showResult('❌ ไม่พบ Barcode');
+    alert('❌ ไม่พบ Barcode');
     busy = false;
     return;
   }
@@ -279,7 +275,12 @@ async function saveScan(barcode) {
 
       await refreshAll();
 
-      alert('✅ บันทึกสำเร็จ\n\nจุดตรวจ: ' + res.point);
+      alert(
+        '✅ บันทึกสำเร็จ\n\n' +
+        'จุดตรวจ: ' + res.point + '\n' +
+        'Barcode: ' + code + '\n\n' +
+        'กดตกลงเพื่อสแกนต่อ'
+      );
 
     } else if (res.status === 'duplicate') {
       playBeep();
@@ -287,11 +288,16 @@ async function saveScan(barcode) {
 
       await refreshAll();
 
-      alert('⚠️ จุดนี้สแกนแล้ว\n\nจุดตรวจ: ' + res.point);
+      alert(
+        '⚠️ จุดนี้สแกนแล้ว\n\n' +
+        'จุดตรวจ: ' + res.point + '\n' +
+        'Barcode: ' + code + '\n\n' +
+        'กดตกลงเพื่อสแกนต่อ'
+      );
 
     } else {
       showResult('❌ ' + res.message);
-      alert('❌ ' + res.message);
+      alert('❌ ' + res.message + '\n\nกดตกลงเพื่อสแกนต่อ');
     }
 
   } catch (err) {
@@ -301,7 +307,7 @@ async function saveScan(barcode) {
 
   setTimeout(() => {
     busy = false;
-  }, 1200);
+  }, 800);
 }
 
 function showResult(message) {
@@ -318,10 +324,14 @@ async function startScan() {
 
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     showResult('❌ Browser นี้ไม่รองรับกล้อง');
+    alert('❌ Browser นี้ไม่รองรับกล้อง');
     return;
   }
 
   codeReader = new ZXing.BrowserMultiFormatReader();
+
+  codeReader.timeBetweenDecodingAttempts = 80;
+  codeReader.timeBetweenScansMillis = 80;
 
   scanning = true;
   $('startBtn').disabled = true;
@@ -329,20 +339,50 @@ async function startScan() {
   $('status').textContent = '📷 กำลังสแกน...';
 
   try {
-    await codeReader.decodeFromVideoDevice(null, 'preview', result => {
-      if (result && result.text) {
+    const constraints = {
+      video: {
+        facingMode: { ideal: 'environment' },
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        focusMode: { ideal: 'continuous' }
+      }
+    };
+
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+    const video = $('preview');
+    video.srcObject = stream;
+    video.setAttribute('playsinline', true);
+    video.muted = true;
+
+    await video.play();
+
+    await codeReader.decodeFromVideoElement(video, result => {
+      if (result && result.text && !busy) {
         saveScan(result.text.trim());
       }
     });
+
   } catch (err) {
     showResult('❌ เปิดกล้องไม่สำเร็จ: ' + err.message);
+    alert('❌ เปิดกล้องไม่สำเร็จ\n\n' + err.message);
     stopScan();
   }
 }
 
 function stopScan() {
   try {
-    if (codeReader) codeReader.reset();
+    if (codeReader) {
+      codeReader.reset();
+      codeReader = null;
+    }
+
+    const video = $('preview');
+
+    if (video && video.srcObject) {
+      video.srcObject.getTracks().forEach(track => track.stop());
+      video.srcObject = null;
+    }
   } catch (e) {}
 
   scanning = false;
