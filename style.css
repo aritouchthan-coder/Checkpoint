@@ -98,13 +98,8 @@ button.danger,
   color: #fff !important;
 }
 
-.green-btn {
-  background: linear-gradient(135deg,#22c55e 0%,#16a34a 100%);
-}
-
 .space-between,
 .btn-row,
-.manual-row,
 .top-buttons {
   display: flex;
   gap: 12px;
@@ -113,8 +108,7 @@ button.danger,
 }
 
 .top-buttons button,
-.btn-row button,
-.manual-row button {
+.btn-row button {
   flex: 1;
   min-width: 130px;
 }
@@ -138,14 +132,7 @@ video {
   border-radius: 12px;
   background: #111;
   margin: 12px 0;
-}
-
-.manual-section {
-  margin-top: 16px;
-  padding: 16px;
-  background: #f8f9ff;
-  border-radius: 12px;
-  border: 2px dashed #c7d2fe;
+  min-height: 220px;
 }
 
 .muted {
