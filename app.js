@@ -325,9 +325,9 @@ async function startScan() {
     $('status').textContent = '📷 กำลังเปิดกล้อง...';
     showResult('กำลังเปิดกล้อง...');
 
-    await codeReader.decodeFromVideoDevice(
-      null,
-      'preview',
+ await codeReader.decodeFromVideoDevice(
+  undefined,
+  'preview',
       async (result, err) => {
         if (result && result.text && !busy) {
           busy = true;
