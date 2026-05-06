@@ -391,12 +391,13 @@ async function saveScan(barcode) {
 
     if (res.status === 'success') {
 
-      playBeep();
+      
 
       showResult(
         '✅ บันทึกแล้ว: ' +
         res.point
       );
+      playBeep();
       alert(
         '✅ บันทึกสำเร็จ\n\n' +
         'จุดตรวจ: ' +
