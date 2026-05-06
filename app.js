@@ -68,11 +68,14 @@ function getTodayWorkDate() {
     now.setDate(now.getDate() - 1);
   }
 
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, '0');
-  const d = String(now.getDate()).padStart(2, '0');
+  return formatDate(now);
+}
 
-  return `${y}-${m}-${d}`;
+function formatDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 function normalizeDate(value) {
@@ -99,13 +102,6 @@ function normalizeDate(value) {
   }
 
   return String(value).trim();
-}
-
-function formatDate(d) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
 }
 
 function normalizeText(value) {
@@ -234,7 +230,6 @@ async function renderDashboard() {
   });
 
   $('dashboardTable').innerHTML = html;
-
   $('totalPoints').textContent = pointsCache.length;
   $('donePoints').textContent = doneCount;
   $('notDonePoints').textContent = pointsCache.length - doneCount;
@@ -307,6 +302,10 @@ async function saveScan(barcode) {
 
   setTimeout(() => {
     busy = false;
+    if (scanning) {
+      $('status').textContent = '📷 กำลังสแกน...';
+      showResult('พร้อมสแกน');
+    }
   }, 800);
 }
 
@@ -318,7 +317,8 @@ async function startScan() {
   if (scanning) return;
 
   if (!window.ZXing) {
-    showResult('กำลังโหลดระบบสแกน...');
+    showResult('❌ โหลดระบบสแกนไม่สำเร็จ');
+    alert('❌ โหลดระบบสแกนไม่สำเร็จ');
     return;
   }
 
@@ -330,38 +330,39 @@ async function startScan() {
 
   codeReader = new ZXing.BrowserMultiFormatReader();
 
-  codeReader.timeBetweenDecodingAttempts = 80;
-  codeReader.timeBetweenScansMillis = 80;
+  codeReader.timeBetweenDecodingAttempts = 150;
+  codeReader.timeBetweenScansMillis = 300;
 
   scanning = true;
+  busy = false;
+
   $('startBtn').disabled = true;
   $('stopBtn').disabled = false;
-  $('status').textContent = '📷 กำลังสแกน...';
+  $('status').textContent = '📷 กำลังเปิดกล้อง...';
+  showResult('กำลังเปิดกล้อง...');
+
+  const constraints = {
+    video: {
+      facingMode: { ideal: 'environment' },
+      width: { ideal: 1280 },
+      height: { ideal: 720 }
+    }
+  };
 
   try {
-    const constraints = {
-      video: {
-        facingMode: { ideal: 'environment' },
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
-        focusMode: { ideal: 'continuous' }
+    await codeReader.decodeFromConstraints(
+      constraints,
+      'preview',
+      (result, err) => {
+        if (result && result.text && !busy) {
+          $('status').textContent = '✅ พบ QR / Barcode';
+          saveScan(result.text.trim());
+        }
       }
-    };
+    );
 
-    const stream = await navigator.mediaDevices.getUserMedia(constraints);
-
-    const video = $('preview');
-    video.srcObject = stream;
-    video.setAttribute('playsinline', true);
-    video.muted = true;
-
-    await video.play();
-
-    await codeReader.decodeFromVideoElement(video, result => {
-      if (result && result.text && !busy) {
-        saveScan(result.text.trim());
-      }
-    });
+    $('status').textContent = '📷 กำลังสแกน...';
+    showResult('พร้อมสแกน');
 
   } catch (err) {
     showResult('❌ เปิดกล้องไม่สำเร็จ: ' + err.message);
@@ -386,9 +387,12 @@ function stopScan() {
   } catch (e) {}
 
   scanning = false;
+  busy = false;
+
   $('startBtn').disabled = false;
   $('stopBtn').disabled = true;
   $('status').textContent = 'หยุดสแกน';
+  showResult('หยุดสแกนแล้ว');
 }
 
 async function renderAdmin() {
