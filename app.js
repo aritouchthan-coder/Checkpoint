@@ -397,16 +397,13 @@ async function saveScan(barcode) {
         '✅ บันทึกแล้ว: ' +
         res.point
       );
-
-      await refreshAll();
-
       alert(
         '✅ บันทึกสำเร็จ\n\n' +
         'จุดตรวจ: ' +
         res.point +
         '\n\nกดตกลงเพื่อสแกนต่อ'
       );
-
+await refreshAll();
     } else if (
       res.status === 'duplicate'
     ) {
@@ -422,7 +419,7 @@ async function saveScan(barcode) {
         'จุดตรวจ: ' +
         res.point
       );
-
+await refreshAll();
     } else {
 
       showResult(
