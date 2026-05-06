@@ -236,9 +236,7 @@ async function renderDashboard() {
 }
 
 async function saveScan(barcode) {
-  if (busy) return;
 
-  busy = true;
 
   const code = String(barcode || '').trim();
 
@@ -328,36 +326,51 @@ async function startScan() {
     return;
   }
 
-  codeReader = new ZXing.BrowserMultiFormatReader();
-
-  codeReader.timeBetweenDecodingAttempts = 150;
-  codeReader.timeBetweenScansMillis = 300;
-
-  scanning = true;
-  busy = false;
-
-  $('startBtn').disabled = true;
-  $('stopBtn').disabled = false;
-  $('status').textContent = '📷 กำลังเปิดกล้อง...';
-  showResult('กำลังเปิดกล้อง...');
-
-  const constraints = {
-    video: {
-      facingMode: { ideal: 'environment' },
-      width: { ideal: 1280 },
-      height: { ideal: 720 }
-    }
-  };
-
   try {
-    await codeReader.decodeFromConstraints(
-      constraints,
+    codeReader = new ZXing.BrowserMultiFormatReader();
+
+    scanning = true;
+    busy = false;
+
+    $('startBtn').disabled = true;
+    $('stopBtn').disabled = false;
+
+    $('status').textContent = '📷 กำลังเปิดกล้อง...';
+    showResult('กำลังเปิดกล้อง...');
+
+    await codeReader.decodeFromVideoDevice(
+      null,
       'preview',
-      (result, err) => {
+      async (result, err) => {
+
+        // เจอ QR / Barcode
         if (result && result.text && !busy) {
+
+          busy = true;
+
+          const text = result.text.trim();
+
           $('status').textContent = '✅ พบ QR / Barcode';
-          saveScan(result.text.trim());
+
+          try {
+            await saveScan(text);
+
+          } finally {
+
+            // หน่วงกันยิงซ้ำ
+            setTimeout(() => {
+              busy = false;
+
+              if (scanning) {
+                $('status').textContent = '📷 กำลังสแกน...';
+                showResult('พร้อมสแกน');
+              }
+
+            }, 1000);
+          }
         }
+
+        // ไม่ต้องทำอะไรกับ error scanning
       }
     );
 
@@ -365,14 +378,24 @@ async function startScan() {
     showResult('พร้อมสแกน');
 
   } catch (err) {
-    showResult('❌ เปิดกล้องไม่สำเร็จ: ' + err.message);
-    alert('❌ เปิดกล้องไม่สำเร็จ\n\n' + err.message);
+
+    console.error(err);
+
+    showResult('❌ เปิดกล้องไม่สำเร็จ');
+
+    alert(
+      '❌ เปิดกล้องไม่สำเร็จ\n\n' +
+      err.message
+    );
+
     stopScan();
   }
 }
 
 function stopScan() {
+
   try {
+
     if (codeReader) {
       codeReader.reset();
       codeReader = null;
@@ -381,16 +404,24 @@ function stopScan() {
     const video = $('preview');
 
     if (video && video.srcObject) {
-      video.srcObject.getTracks().forEach(track => track.stop());
+
+      video.srcObject
+        .getTracks()
+        .forEach(track => track.stop());
+
       video.srcObject = null;
     }
-  } catch (e) {}
+
+  } catch (e) {
+    console.error(e);
+  }
 
   scanning = false;
   busy = false;
 
   $('startBtn').disabled = false;
   $('stopBtn').disabled = true;
+
   $('status').textContent = 'หยุดสแกน';
   showResult('หยุดสแกนแล้ว');
 }
