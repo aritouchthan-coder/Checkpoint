@@ -447,8 +447,10 @@ async function saveScan(barcode) {
       err.message
     );
   }
-}
 
+  // 🔥 restart scanner กันค้าง
+  restartScanner();
+}
 function showResult(message) {
   $('scanResult').textContent =
     message;
@@ -599,7 +601,49 @@ async function startScan() {
     stopScan();
   }
 }
+function restartScanner() {
 
+  try {
+
+    if (codeReader) {
+
+      codeReader.reset();
+
+      codeReader = null;
+    }
+
+    const video = $('preview');
+
+    if (
+      video &&
+      video.srcObject
+    ) {
+
+      video.srcObject
+        .getTracks()
+        .forEach(track => track.stop());
+
+      video.srcObject = null;
+    }
+
+  } catch (e) {
+
+    console.error(e);
+  }
+
+  scanning = false;
+
+  busy = false;
+
+  $('status').textContent =
+    'กำลังเริ่มสแกนใหม่...';
+
+  setTimeout(() => {
+
+    startScan();
+
+  }, 500);
+}
 function stopScan() {
 
   try {
